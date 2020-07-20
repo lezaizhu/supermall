@@ -14,5 +14,6 @@ export default {
 .tab-bar {
   font-size: 14px;
   height: 49px;
+  /* position: fixed; */
 }
 </style>

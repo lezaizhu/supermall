@@ -25,7 +25,11 @@ const routes = [
   },
   {
     path: '/shoppingcart',
-    component: () => import('views/shoppingcart/Shoppingcart.vue')
+    component: () => import('views/cart/Cart.vue')
+  },
+  {
+    path: '/detail/:iid',
+    component: () => import('views/detail/Detail.vue')
   }
 ]
 

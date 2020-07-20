@@ -1,14 +1,16 @@
 <template>
   <div id="app">
-    <router-view></router-view>
-    <main-tab-bar></main-tab-bar>
+    <keep-alive include="Home">
+      <router-view></router-view>
+    </keep-alive>
+    <main-tab-bar v-show="isShowTabBar"></main-tab-bar>
     <!-- <button @click="test">test</button> -->
   </div>
 </template>
 
 <script>
 
-import {request} from 'network/request'
+import { request } from 'network/request'
 import MainTabBar from 'components/content/tabbar/MainTabBar.vue'
 // import axios from 'axios'
 
@@ -17,22 +19,9 @@ export default {
   components: {
     MainTabBar
   },
-  data () {
-    return {
-      data: null,
-    }
-  },
-  created () {
-    request({
-      url: '/home/multidata'
-    }).then(res => {
-      // console.log(res)
-      this.data = res.data
-    })
-  },
-  methods: {
-    test () {
-      console.log(this.data)
+  computed: {
+    isShowTabBar () {
+      return this.$route.path.indexOf('detail') == -1
     }
   }
 }

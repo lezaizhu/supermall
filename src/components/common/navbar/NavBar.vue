@@ -4,7 +4,7 @@
       <slot name="left_nav"></slot>
     </div>
     <div class="center">
-      <slot name='title'>购物车</slot>
+      <slot name='title'></slot>
     </div>
     <div class="right">
       <slot name="right_nav"></slot>
@@ -20,18 +20,21 @@ export default {
 
 <style scoped>
 .nav-bar {
+  width: 100%;
   display: flex;
   text-align: center;
   height: 44px;
   line-height: 44px;
   box-shadow: 0px 1px 1px rgba(100, 100, 100, 0.1); 
+  top: 0;
+  z-index: 9;
 }
 .left, .right {
   width: 60px;
-  /* background-color: blue; */
 }
 .center {
-  /* background-color: red; */
+  text-align: center;
   flex: 1;
+  display: flex;
 }
 </style>

@@ -1,13 +1,13 @@
 <template>
   <div id="my-swiper">
-    <div class="swiper" @touchstart="touchStart" @touchmove="touchMove" @touchend="touchEnd">
+    <div class="swiper" @touchstart="touchStart" @touchmove="touchMove" @touchend="touchEnd" ref="swiper">
       <slot></slot>
     </div>
 
     <div class="indicator" v-if="showIndicator && slideCount > 1">
-      <slot name="indicator">
+      <!-- <slot name="indicator"> -->
         <div v-for="(value, index) in slideCount" class="indi-item" :class="{active: (index + 1) == currentIndex}"></div>
-      </slot>
+      <!-- </slot> -->
     </div>
   </div>
 </template>
@@ -15,15 +15,15 @@
 <script>
 export default {
   name: 'Swiper',
-  props: {
-    banners: {
-      type: Array,
+  // props: {
+  //   banners: {
+  //     type: Array,
       // default () {
       //   return []
       // },
       // required: true
-    }
-  },
+    // }
+  // },
   props: {
     interval: {
       type: Number,
@@ -44,11 +44,14 @@ export default {
   },
   data () {
     return {
+      playTimer: null,
       slideCount: 0, // 元素个数
       totalWidth: 0, // swiper的宽度
       swiperStyle: {}, // swiper样式
       currentIndex: 1, // 当前的index
       scrolling: false, // 是否正在滚动
+      firstOrLastSlide: false,
+      isOperate: false
 
       // distance: null
     }
@@ -57,19 +60,30 @@ export default {
   //   console.log(this.banner)
   // }
   mounted () {
-    // console.log(this.banners)
-    setTimeout(() => {
-      // 1. 操作DOM, 在前后添加slide
+    // 1. 使用计时器来操作DOM
+    // setTimeout(() => {
+    //   // 1. 操作DOM, 在前后添加slide
+    //   this.handleDom()
+
+    //   // 2. 开启计时器
+    //   this.startTimer()
+
+    // }, 1000)
+
+    // 2. 使用$nextTick操作DOM
+    // this.$nextTick(() => {
+      setTimeout(() => {
       this.handleDom()
 
-      // 2. 开启计时器
       this.startTimer()
 
-    }, 100)
+    }, 2000)
+    // })
   },
   methods: {
     // 定时器操作
     startTimer () {
+      // if (this.playTimer) return
       this.playTimer = window.setInterval(() => {
         this.currentIndex++
         this.scrollContent(-this.currentIndex * this.totalWidth)
@@ -95,7 +109,9 @@ export default {
       this.checkPosition()
 
       // 4. 滚动完成
-      this.scrolling = false
+      setTimeout(() => {
+        this.scrolling = false
+      }, this.animDuration)
     },
 
     // 检查位置
@@ -112,17 +128,23 @@ export default {
           this.setTransform(-this.currentIndex * this.totalWidth)
         }
       }, this.animDuration)
+      this.firstOrLastSlide = false
     },  
     
     // 触摸屏幕开始
     touchStart (e) {
-      if (this.scrolling) return
+      // 正在滑动或者切换到第一或者最后一张的时候不可以操作
+      // if (this.scrolling || this.firstOrLastSlide) return
+      this.shutDown()
+
+      // 操作的时候暂停自动滑动
 
       this.stopTimer()
 
       this.startX = e.touches[0].pageX
     },
     touchMove (e) {
+      this.shutDown()
 
       // 使图片跟着手指滑动
 
@@ -139,6 +161,8 @@ export default {
     },
     // 触摸屏幕结束
     touchEnd () {
+      this.shutDown()
+
       // 实际移动的距离
       let currentMove = Math.abs(this.distance)
       // 设置滑动临界值
@@ -157,35 +181,46 @@ export default {
       this.scrollContent(-this.currentIndex * this.totalWidth)
 
       this.startTimer()
+      this.startX = 0
+      this.currentX = 0
+      this.distance = 0
     },
     handleDom () {
       // 1. 获取需要操作的元素
-      let swiperEl = document.querySelector('.swiper')
-      let slidesEls = swiperEl.querySelectorAll('.slide')
+      let swiperEl = this.$refs.swiper
+      if (swiperEl) {
+        let slidesEls = swiperEl.querySelectorAll('.slide')
+        // console.log(swiperEl)
+        // console.log(slidesEls)
 
-      // 2. 保存个数
-      this.slideCount = slidesEls.length
+        // 2. 保存个数
+        this.slideCount = slidesEls.length
 
-      // 3. 如果个数大于1个, 那么在前后分别添加一个slide
-      if (this.slideCount > 1) {
-        let cloneFirst = slidesEls[0].cloneNode(true)
-        let cloneLast = slidesEls[this.slideCount - 1].cloneNode(true)
-        swiperEl.insertBefore(cloneLast, slidesEls[0])
-        swiperEl.appendChild(cloneFirst)
-        this.totalWidth = swiperEl.offsetWidth
-        this.swiperStyle = swiperEl.style
+        // 3. 如果个数大于1个, 那么在前后分别添加一个slide
+        if (this.slideCount > 1) {
+          let cloneFirst = slidesEls[0].cloneNode(true)
+          let cloneLast = slidesEls[this.slideCount - 1].cloneNode(true)
+          swiperEl.insertBefore(cloneLast, slidesEls[0])
+          swiperEl.appendChild(cloneFirst)
+          this.totalWidth = swiperEl.offsetWidth
+          this.swiperStyle = swiperEl.style
+        }
+        // console.log(this.swiperStyle.transform)
+        this.setTransform(-this.totalWidth);
+        // console.log(this.swiperStyle.transform)
+        // console.log(this.swiperStyle.transition)
       }
-      // console.log(this.swiperStyle.transform)
-      this.setTransform(-this.totalWidth);
-      // console.log(this.swiperStyle.transform)
-      // console.log(this.swiperStyle.transition)
+      
     },
 
     // 工具
     // 设置水平位移
     setTransform (positon) {
       this.swiperStyle.transform = `translate3d(${ positon }px, 0, 0)`
-      
+    },
+    // 禁止滑动的条件
+    shutDown () {
+      if (this.scrolling || this.firstOrLastSlide) return
     }
   }
 }
